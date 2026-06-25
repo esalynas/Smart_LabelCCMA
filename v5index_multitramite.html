@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Smart Label - Innovación Registral CCMA</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--text:#f8fafc;--muted:#94a3b8;--primary:#38bdf8;--success:#4ade80;--danger:#f87171;--border:#334155;}
+*{box-sizing:border-box}
+body{margin:0;padding:40px 20px;font-family:system-ui;background:var(--bg);color:var(--text);display:flex;justify-content:center}
+.container{max-width:760px;width:100%;background:var(--card);padding:32px;border-radius:20px;border:1px solid var(--border)}
+.header{text-align:center;margin-bottom:30px}.badge{display:inline-block;padding:8px 16px;border-radius:50px;background:rgba(56,189,248,.1);color:var(--primary);margin-bottom:12px}.subtitle{color:var(--muted)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+input,select,textarea{width:100%;padding:12px;background:#09111f;border:1px solid var(--border);color:white;border-radius:10px}
+#tramite{
+
+display:none;
+
+width:100%;
+
+margin-top:8px;
+
+background:#09111f;
+
+}
+
+/* abierto */
+
+#tramite.abierto{
+
+display:block;
+
+height:180px;
+
+overflow-y:auto;
+
+}
+
+/* opciones */
+
+#tramite option{
+
+padding:14px;
+
+min-height:56px;
+
+}
+
+/* scroll */
+
+#tramite::-webkit-scrollbar{
+
+width:8px;
+
+}
+
+#tramite::-webkit-scrollbar-thumb{
+
+background:#38bdf8;
+
+border-radius:20px;
+
+}
+
+#visorTramite{
+
+height:58px;
+
+display:flex;
+
+align-items:center;
+
+padding:0 14px;
+
+background:#09111f;
+
+border:1px solid var(--border);
+
+border-radius:10px;
+
+margin-bottom:8px;
+
+color:white;
+
+font-weight:600;
+
+cursor:pointer;
+
+overflow:hidden;
+
+white-space:nowrap;
+
+text-overflow:ellipsis;
+
+}
+
+#detalleTramites{
+
+margin-top:10px;
+
+font-size:.85rem;
+
+color:#94a3b8;
+
+line-height:1.5;
+
+}
+
+.progress{margin:30px 0}.progress-top{display:flex;justify-content:space-between}.bar{height:10px;background:#09111f;border-radius:20px;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,#38bdf8,#4ade80)}
+.checklist{padding:20px;background:#09111f;border-radius:14px;max-height:340px;overflow:auto}
+.item{display:flex;gap:12px;padding:14px;margin-bottom:10px;border-radius:10px;background:#162234}.item input{width:auto}.origen{font-size:.75rem;color:#38bdf8;margin-top:4px}
+.alert{padding:16px;border-radius:12px;margin:20px 0}.danger{background:rgba(248,113,113,.15);color:var(--danger)}.success{background:rgba(74,222,128,.15);color:var(--success)}
+button{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff;margin-top:10px}.copy{background:linear-gradient(135deg,#4ade80,#22c55e)}
+#btnComentario{background:linear-gradient(135deg,#334155,#1e293b)} #comentarioBox{display:none} #erp{height:240px;color:#4ade80}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.85);justify-content:center;align-items:center}.modal-content{background:var(--card);max-width:550px;width:100%;padding:28px;border-radius:20px}.post-copy-actions{display:none}
+</style>
+</head>
+<body>
+<div class="container"><div class="header"><div class="badge">Transformación Digital 2026</div><h2>Smart Label</h2><div class="subtitle">Control de Legalidad</div></div>
+<div class="grid">
+
+<div>
+
+<label>Tipo trámite</label>
+
+<div id="visorTramite">
+Seleccionar trámites
+</div>
+
+<select id="tramite" multiple></select>
+
+<div id="detalleTramites">
+
+Selecciona uno o varios trámites
+
+</div>
+
+</div>
+
+<div>
+
+<label>Radicado</label>
+
+<input id="radicado">
+
+</div>
+
+</div><div class="progress"><div class="progress-top"><span>Progreso</span><span id="porcentaje">0%</span></div><div class="bar"><div class="fill" id="fill"></div></div></div>
+<div class="checklist" id="checklist"></div><div id="estado" class="alert danger">⚠ Te Faltan controles</div>
+<button id="btnComentario">＋ Agregar comentario para Actualización</button>
+<div id="comentarioBox"><textarea id="comentario"></textarea><button id="guardarComentario">Guardar comentario</button></div>
+<button id="procesar" disabled>Generar mi Label</button></div>
+<div class="modal-overlay" id="salidaModal"><div class="modal-content"><h3>✓ Label Generado Exitosamente</h3><textarea id="erp" readonly></textarea><button class="copy" id="btnCopiar">Copiar al Portapapeles</button><div class="post-copy-actions" id="accionesPostCopia"><button id="btnCerrarModal">Cerrar Ventana</button><button id="btnNuevoSmart">Iniciar otro Smart Label</button></div></div></div>
+<script src="tramites.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const tramite=$("tramite"),
+visorTramite=$("visorTramite"),
+detalleTramites=$("detalleTramites"),radicado=$("radicado"),checklist=$("checklist"),porcentaje=$("porcentaje"),fill=$("fill"),estado=$("estado"),procesar=$("procesar"),comentario=$("comentario"),comentarioBox=$("comentarioBox"),erp=$("erp");
+function inicializarSelect(){tramite.innerHTML="";Object.entries(matrizTramites).forEach(([k,v])=>tramite.add(new Option(v.nombre,k)));}
+function actualizarResumen(){
+
+const seleccionados=[
+...tramite.selectedOptions
+];
+
+// ninguno
+if(
+seleccionados.length===0
+){
+
+visorTramite.textContent=
+"Seleccionar trámites";
+
+detalleTramites.textContent=
+"Selecciona uno o varios trámites";
+
+}
+
+// uno
+else if(
+seleccionados.length===1
+){
+
+visorTramite.textContent=
+seleccionados[0].text;
+
+detalleTramites.textContent=
+seleccionados[0].text;
+
+}
+
+// varios
+else{
+
+visorTramite.textContent=
+`VARIOS (${seleccionados.length})`;
+
+detalleTramites.textContent=
+seleccionados
+.map(
+x=>x.text
+)
+.join(
+" • "
+);
+
+}
+
+}
+
+
+function cargar(){checklist.innerHTML="";const controles=[];const vistos=new Set();[...tramite.selectedOptions].forEach(op=>{matrizTramites[op.value].controles.forEach(c=>{if(!vistos.has(c)){vistos.add(c);controles.push({control:c,origen:matrizTramites[op.value].nombre});}})});controles.forEach((x,i)=>checklist.insertAdjacentHTML('beforeend',`<div class='item'><input type='checkbox' id='c${i}' onchange='actualizar()'><label for='c${i}'>${x.control}<div class='origen'>${x.origen}</div></label></div>`));actualizar();actualizarResumen();}
+function actualizar(){const ch=[...document.querySelectorAll('.checklist input')];const ok=ch.filter(x=>x.checked).length,total=ch.length,p=total?Math.round(ok*100/total):0;fill.style.width=p+'%';porcentaje.textContent=p+'%';procesar.disabled=p!==100;estado.className='alert '+(p===100?'success':'danger');estado.innerHTML=p===100?'✓ Control completo':'⚠ Te Faltan controles';}
+function generar(){let t=`CCMA - CONTROL LEGALIDAD\n\nTRÁMITES:\n`;[...tramite.selectedOptions].forEach(x=>t+=`• ${x.text}\n`);t+=`\nRADICADO:\n${radicado.value||'PENDIENTE'}\n\nFECHA:\n${new Date().toLocaleString()}\n`;document.querySelectorAll('.checklist input').forEach(c=>{if(c.checked)t+=`\n[✓] ${c.nextElementSibling.childNodes[0].textContent}`});if(comentario.value.trim())t+=`\n\nCOMENTARIO:\n${comentario.value}`;erp.value=t;salidaModal.style.display='flex';accionesPostCopia.style.display='none';btnCopiar.style.display='block';}
+btnComentario.onclick=()=>comentarioBox.style.display=comentarioBox.style.display==='block'?'none':'block';guardarComentario.onclick=()=>comentarioBox.style.display='none';btnCopiar.onclick=async()=>{await navigator.clipboard.writeText(erp.value);accionesPostCopia.style.display='block';btnCopiar.style.display='none'};btnCerrarModal.onclick=()=>salidaModal.style.display='none';btnNuevoSmart.onclick=()=>location.reload();tramite.onchange=cargar;
+
+visorTramite.onclick=()=>{
+
+tramite.classList.toggle(
+"abierto"
+);
+
+if(
+tramite.classList.contains(
+"abierto"
+)
+){
+
+tramite.focus();
+
+}
+
+};
+
+document.addEventListener(
+"click",
+e=>{
+
+if(
+
+!tramite.contains(
+e.target
+)
+
+&&
+
+!visorTramite.contains(
+e.target
+)
+
+){
+
+tramite.classList.remove(
+"abierto"
+);
+
+}
+
+}
+);
+
+procesar.onclick=generar;
+
+inicializarSelect();
+cargar();
+</script></body></html>
