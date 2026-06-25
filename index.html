@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Smart Label - Innovación Registral CCMA</title>
+
+<style>
+
+:root{
+--bg:#0f172a;
+--card:#1e293b;
+--text:#f8fafc;
+--muted:#94a3b8;
+--primary:#38bdf8;
+--success:#4ade80;
+--danger:#f87171;
+--border:#334155;
+}
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+padding:40px 20px;
+font-family:system-ui;
+background:var(--bg);
+color:var(--text);
+display:flex;
+justify-content:center;
+}
+
+.container{
+max-width:760px;
+width:100%;
+background:var(--card);
+padding:32px;
+border-radius:20px;
+border:1px solid var(--border);
+}
+
+.header{
+text-align:center;
+margin-bottom:30px;
+}
+
+.badge{
+display:inline-block;
+padding:8px 16px;
+border-radius:50px;
+background:rgba(56,189,248,.1);
+color:var(--primary);
+margin-bottom:12px;
+}
+
+.subtitle{
+color:var(--muted);
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:18px;
+}
+
+input,
+select,
+textarea{
+width:100%;
+padding:12px;
+background:#09111f;
+border:1px solid var(--border);
+color:white;
+border-radius:10px;
+}
+
+.progress{
+margin:30px 0;
+}
+
+.progress-top{
+display:flex;
+justify-content:space-between;
+margin-bottom:10px;
+color:var(--muted);
+}
+
+.bar{
+height:10px;
+background:#09111f;
+border-radius:20px;
+overflow:hidden;
+}
+
+.fill{
+height:100%;
+width:0;
+background:linear-gradient(90deg,#38bdf8,#4ade80);
+transition:.4s;
+}
+
+.checklist{
+padding:20px;
+background:#09111f;
+border-radius:14px;
+
+/* máximo 5 validaciones visibles */
+max-height:340px;
+overflow-y:auto;
+overflow-x:hidden;
+
+/* scroll elegante */
+scrollbar-width:thin;
+scrollbar-color:#38bdf8 #09111f;
+}
+
+.checklist::-webkit-scrollbar{
+width:8px;
+}
+
+.checklist::-webkit-scrollbar-track{
+background:#09111f;
+border-radius:20px;
+}
+
+.checklist::-webkit-scrollbar-thumb{
+background:linear-gradient(
+180deg,
+#38bdf8,
+#4ade80
+);
+border-radius:20px;
+}
+
+.checklist::-webkit-scrollbar-thumb:hover{
+background:#4ade80;
+}
+
+.item{
+display:flex;
+align-items:center;
+gap:12px;
+padding:14px;
+margin-bottom:10px;
+border-radius:10px;
+background:#162234;
+}
+
+.item input{
+width:auto;
+flex:none;
+margin:0;
+}
+
+.item label{
+flex:1;
+cursor:pointer;
+}
+
+.alert{
+padding:16px;
+border-radius:12px;
+margin:20px 0;
+}
+
+.danger{
+background:rgba(248,113,113,.15);
+color:var(--danger);
+}
+
+.success{
+background:rgba(74,222,128,.15);
+color:var(--success);
+}
+
+button{
+width:100%;
+padding:14px;
+border:none;
+border-radius:12px;
+cursor:pointer;
+font-weight:700;
+background:linear-gradient(135deg,#38bdf8,#0284c7);
+color:white;
+margin-top:10px;
+}
+
+button:disabled{
+opacity:.5;
+cursor:not-allowed;
+}
+
+.copy{
+background:linear-gradient(135deg,#4ade80,#22c55e);
+}
+
+#btnComentario{
+background:linear-gradient(
+135deg,
+#334155,
+#1e293b
+);
+}
+
+#comentarioBox{
+display:none;
+margin-top:10px;
+}
+
+#comentario{
+height:120px;
+}
+
+#erp{
+height:240px;
+color:#4ade80;
+margin-bottom:15px;
+font-family: monospace;
+}
+
+/* --- ESTILOS PARA LA INTERFAZ FLOTANTE (MODAL) --- */
+.modal-overlay {
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(15,23,42,0.85);
+backdrop-filter:blur(4px);
+justify-content:center;
+align-items:center;
+z-index:1000;
+padding:20px;
+}
+
+.modal-content {
+background:var(--card);
+max-width:550px;
+width:100%;
+padding:28px;
+border-radius:20px;
+border:1px solid var(--border);
+box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);
+text-align:center;
+}
+
+.modal-title {
+margin-top:0;
+margin-bottom:15px;
+font-size:1.4rem;
+color:var(--primary);
+}
+
+.post-copy-actions {
+display:none;
+margin-top:15px;
+border-top:1px solid var(--border);
+padding-top:15px;
+}
+
+.post-copy-title {
+font-size:0.95rem;
+color:var(--success);
+margin-bottom:12px;
+font-weight:600;
+}
+
+.modal-grid-buttons {
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+}
+
+.btn-secondary {
+background:linear-gradient(135deg,#475569,#334155);
+}
+
+.btn-accent {
+background:linear-gradient(135deg,#38bdf8,#0284c7);
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+
+<div class="badge">
+MVP | Transformación Digital
+</div>
+
+<h2>
+Smart Label 
+</h2>
+
+<div class="subtitle">
+Control de Legalidad
+</div>
+
+</div>
+
+<div class="grid">
+
+<div>
+
+<label>Tipo trámite</label>
+
+<!-- Las opciones se inyectan de forma automática desde JavaScript -->
+<select id="tramite"></select>
+
+</div>
+
+<div>
+
+<label>Radicado</label>
+
+<input id="radicado">
+
+</div>
+
+</div>
+
+<div class="progress">
+
+<div class="progress-top">
+
+<span>Progreso</span>
+
+<span id="porcentaje">0%</span>
+
+</div>
+
+<div class="bar">
+
+<div class="fill" id="fill"></div>
+
+</div>
+
+</div>
+
+<div class="checklist" id="checklist"></div>
+
+<div id="estado" class="alert danger">
+
+⚠ Te Faltan controles
+
+</div>
+
+<button id="btnComentario">
+＋ Agregar comentario para Actualización
+</button>
+
+<div id="comentarioBox">
+
+<textarea
+id="comentario"
+placeholder="Comentario opcional...">
+</textarea>
+
+<button id="guardarComentario">
+Guardar comentario
+</button>
+
+</div>
+
+<button id="procesar" disabled>
+Generar mi Label
+</button>
+
+</div>
+
+<!-- INTERFAZ FLOTANTE CENTRAL DE SALIDA -->
+<div class="modal-overlay" id="salidaModal">
+
+<div class="modal-content">
+
+<h3 class="modal-title">✓ Label Generado Exitosamente</h3>
+
+<textarea id="erp" readonly></textarea>
+
+<button class="copy" id="btnCopiar">
+Copiar al Portapapeles
+</button>
+
+<!-- Opciones dinámicas que aparecen tras copiar -->
+<div class="post-copy-actions" id="accionesPostCopia">
+
+<div class="post-copy-title">¡Texto Copiado! ¿Qué deseas hacer ahora?</div>
+
+<div class="modal-grid-buttons">
+
+<button class="btn-secondary" id="btnCerrarModal">
+Cerrar Ventana
+</button>
+
+<button class="btn-accent" id="btnNuevoSmart">
+Iniciar otro Smart Label
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- VÍNCULO AL ARCHIVO EXTERNO DE CONTROLES -->
+<script src="tramites.js"></script>
+
+<script>
+
+const tramite=document.getElementById("tramite");
+const radicado=document.getElementById("radicado");
+const checklist=document.getElementById("checklist");
+const porcentaje=document.getElementById("porcentaje");
+const fill=document.getElementById("fill");
+const estado=document.getElementById("estado");
+const procesar=document.getElementById("procesar");
+const comentario=document.getElementById("comentario");
+const comentarioBox=document.getElementById("comentarioBox");
+const btnComentario=document.getElementById("btnComentario");
+const guardarComentario=document.getElementById("guardarComentario");
+const erp=document.getElementById("erp");
+
+// Elementos de la interfaz flotante
+const salidaModal=document.getElementById("salidaModal");
+const btnCopiar=document.getElementById("btnCopiar");
+const accionesPostCopia=document.getElementById("accionesPostCopia");
+const btnCerrarModal=document.getElementById("btnCerrarModal");
+const btnNuevoSmart=document.getElementById("btnNuevoSmart");
+
+// FUNCIÓN NUEVA: Genera dinámicamente las opciones del SELECT usando el archivo externo
+function inicializarSelect(){
+  tramite.innerHTML = "";
+  for (const llave in matrizTramites) {
+    const opcion = document.createElement("option");
+    opcion.value = llave;
+    opcion.textContent = matrizTramites[llave].nombre;
+    tramite.appendChild(opcion);
+  }
+}
+
+function cargar(){
+const tramiteSeleccionado = matrizTramites[tramite.value];
+checklist.innerHTML="";
+
+if(tramiteSeleccionado) {
+  tramiteSeleccionado.controles.forEach((txt,i)=>{
+    checklist.innerHTML+=`
+    <div class="item">
+    <input
+    type="checkbox"
+    id="c${i}"
+    onchange="actualizar()">
+    <label for="c${i}">
+    ${txt}
+    </label>
+    </div>
+    `;
+  });
+}
+
+cerrarInterfazModal();
+erp.value="";
+actualizar();
+}
+
+function actualizar(){
+const tramiteSeleccionado = matrizTramites[tramite.value];
+if(!tramiteSeleccionado) return;
+
+let ok=0;
+tramiteSeleccionado.controles.forEach((_,i)=>{
+  if(document.getElementById(`c${i}`)?.checked)
+  ok++;
+});
+
+const pct= Math.round((ok/tramiteSeleccionado.controles.length)*100);
+
+fill.style.width= pct+"%";
+porcentaje.textContent= pct+"%";
+
+if(pct===100){
+  estado.className= "alert success";
+  estado.innerHTML= "✓ Control completo";
+  procesar.disabled=false;
+}else{
+  estado.className= "alert danger";
+  estado.innerHTML= "⚠ Te Faltan controles";
+  procesar.disabled=true;
+}
+}
+
+function generar(){
+const tramiteSeleccionado = matrizTramites[tramite.value];
+
+let texto=
+`CCMA - CONTROL LEGALIDAD
+
+TRÁMITE:
+${tramite.options[tramite.selectedIndex].text}
+
+RADICADO:
+${radicado.value||"PENDIENTE"}
+
+FECHA:
+${new Date().toLocaleString()}
+`;
+
+document
+.querySelectorAll(
+'.checklist input'
+)
+.forEach((c,i)=>{
+  if(c.checked){
+    texto+=`\n[✓] ${tramiteSeleccionado.controles[i]}`;
+  }
+});
+
+if(comentario.value.trim()){
+  texto+=`\n\nCOMENTARIO:\n${comentario.value}`;
+}
+
+erp.value=texto;
+salidaModal.style.display="flex";
+accionesPostCopia.style.display="none";
+btnCopiar.style.display="block";
+}
+
+btnComentario.onclick=()=>{
+comentarioBox.style.display=
+comentarioBox.style.display==="block" ? "none" : "block";
+};
+
+guardarComentario.onclick=()=>{
+comentarioBox.style.display="none";
+alert("Comentario guardado");
+};
+
+async function copiar(){
+await navigator.clipboard.writeText(erp.value);
+btnCopiar.style.display="none";
+accionesPostCopia.style.display="block";
+}
+
+function cerrarInterfazModal() {
+salidaModal.style.display="none";
+}
+
+function iniciarNuevoSmartLabel() {
+radicado.value = "";
+comentario.value = "";
+comentarioBox.style.display = "none";
+cerrarInterfazModal();
+cargar();
+}
+
+tramite.onchange=cargar;
+procesar.onclick=generar;
+btnCopiar.onclick=copiar;
+btnCerrarModal.onclick=cerrarInterfazModal;
+btnNuevoSmart.onclick=iniciarNuevoSmartLabel;
+
+// Ejecución inicial en orden
+inicializarSelect();
+cargar();
+
+</script>
+
+</body>
+</html>
